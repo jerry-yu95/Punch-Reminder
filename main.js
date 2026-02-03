@@ -5,6 +5,7 @@ const fs = require('fs');
 let mainWindow;
 let reminderWindow;
 let tray;
+let isQuitting = false;
 const SETTINGS_FILE = 'settings.json';
 
 const defaultSettings = {
@@ -77,6 +78,17 @@ function createWindow() {
 
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 
+  mainWindow.on('close', (event) => {
+    if (isQuitting) return;
+    // Keep app running in tray; hide instead of destroying the window.
+    event.preventDefault();
+    mainWindow.hide();
+  });
+
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
+
   mainWindow.on('blur', () => {
     // Subtle auto-hide on blur for quick dismiss
     if (mainWindow && !mainWindow.webContents.isDevToolsOpened()) {
@@ -148,7 +160,10 @@ function createTray() {
 }
 
 function toggleWindow() {
-  if (!mainWindow) return;
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    createWindow();
+    return;
+  }
   if (mainWindow.isVisible()) {
     mainWindow.hide();
   } else {
@@ -287,6 +302,10 @@ app.whenReady().then(() => {
   createWindow();
   createTray();
   startScheduler();
+});
+
+app.on('before-quit', () => {
+  isQuitting = true;
 });
 
 app.on('window-all-closed', (event) => {
