@@ -1,0 +1,36 @@
+{
+  "name": "punch-reminder",
+  "version": "0.1.0",
+  "description": "Cross-platform daily punch in/out reminder",
+  "author": "Your Company",
+  "main": "main.js",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "^30.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.company.punchreminder",
+    "productName": "Punch Reminder",
+    "icon": "assets/icon.png",
+    "files": [
+      "**/*"
+    ],
+    "directories": {
+      "buildResources": "assets"
+    },
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": ["dmg", "zip"]
+    },
+    "win": {
+      "target": ["nsis", "zip"]
+    }
+  }
+}

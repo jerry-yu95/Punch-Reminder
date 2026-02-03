@@ -1,0 +1,329 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&display=swap');
+
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.28);
+  --glass-border: rgba(255, 255, 255, 0.45);
+  --glass-shadow: rgba(20, 30, 60, 0.25);
+  --text: #12213a;
+  --muted: rgba(18, 33, 58, 0.6);
+  --accent: #2c7a6f;
+  --accent-2: #1c3d59;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Manrope', 'SF Pro Display', 'Segoe UI Variable', sans-serif;
+}
+
+body {
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at top left, rgba(93, 176, 255, 0.25), transparent 50%),
+    radial-gradient(circle at bottom right, rgba(106, 240, 200, 0.25), transparent 55%),
+    linear-gradient(135deg, rgba(246, 249, 255, 0.9), rgba(214, 223, 235, 0.8));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+}
+
+.app {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.glass {
+  width: 100%;
+  max-width: 360px;
+  padding: 16px 16px 14px;
+  border-radius: 18px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 20px 40px var(--glass-shadow);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  animation: fadeIn 0.6s ease;
+  position: relative;
+}
+
+.glass::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 24px;
+  -webkit-app-region: drag;
+}
+
+.header {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.subtitle {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.icon-button {
+  border: 1px solid rgba(18, 33, 58, 0.12);
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--text);
+  border-radius: 10px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.icon-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(28, 61, 89, 0.2);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(18, 33, 58, 0.08);
+}
+
+.row:last-of-type {
+  border-bottom: none;
+}
+
+.label {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+input[type='time'] {
+  border: 1px solid rgba(18, 33, 58, 0.18);
+  background: rgba(255, 255, 255, 0.7);
+  padding: 6px 8px;
+  border-radius: 8px;
+  color: var(--text);
+}
+
+select {
+  border: 1px solid rgba(18, 33, 58, 0.18);
+  background: rgba(255, 255, 255, 0.7);
+  padding: 6px 8px;
+  border-radius: 8px;
+  color: var(--text);
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.hint {
+  margin-top: 8px;
+  font-size: 11px;
+  color: rgba(18, 33, 58, 0.55);
+}
+
+.onboarding {
+  margin: 8px 0 6px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(18, 33, 58, 0.1);
+  display: grid;
+  gap: 6px;
+}
+
+.onboarding-title {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.onboarding-text {
+  font-size: 11px;
+  color: rgba(18, 33, 58, 0.7);
+}
+
+.onboarding-button {
+  justify-self: end;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  border: 1px solid rgba(18, 33, 58, 0.12);
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.hidden {
+  display: none;
+}
+
+.onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(18, 33, 58, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 10;
+}
+
+.overlay-card {
+  width: 280px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 20px 40px rgba(20, 30, 60, 0.25);
+  text-align: left;
+  animation: fadeIn 0.5s ease;
+}
+
+.overlay-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.overlay-text {
+  font-size: 12px;
+  color: rgba(18, 33, 58, 0.75);
+  margin-bottom: 6px;
+}
+
+.overlay-button {
+  margin-top: 6px;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+button {
+  border: none;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 6px 14px rgba(28, 61, 89, 0.25);
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+button.ghost {
+  background: rgba(255, 255, 255, 0.65);
+  color: var(--text);
+  box-shadow: none;
+  border: 1px solid rgba(18, 33, 58, 0.12);
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 38px;
+  height: 22px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: rgba(18, 33, 58, 0.25);
+  transition: 0.2s;
+  border-radius: 22px;
+}
+
+.slider:before {
+  position: absolute;
+  content: '';
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.2s;
+  border-radius: 50%;
+}
+
+.switch input:checked + .slider {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+}
+
+.switch input:checked + .slider:before {
+  transform: translateX(16px);
+}
+
+.toast {
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  padding: 8px 12px;
+  background: rgba(18, 33, 58, 0.85);
+  color: white;
+  border-radius: 12px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  font-size: 12px;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Punch Reminder</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <div class="glass">
+        <header class="header">
+          <div>
+            <div class="title">Punch Reminder</div>
+            <div class="subtitle">每日签到 / 签退提醒</div>
+          </div>
+          <div class="header-actions">
+            <button id="resetPosition" class="icon-button" title="重置位置">⦿</button>
+            <button id="hideWindow" class="icon-button" title="最小化到托盘">–</button>
+          </div>
+        </header>
+
+        <section id="onboarding" class="onboarding hidden">
+          <div class="onboarding-title">首次使用</div>
+          <div class="onboarding-text">设置签到/签退时间并点击保存。可拖动顶部移动浮窗。</div>
+          <button id="dismissOnboarding" class="onboarding-button">知道了</button>
+        </section>
+
+        <section class="row">
+          <div class="label">签到时间</div>
+          <input id="checkInTime" type="time" />
+          <label class="switch">
+            <input id="checkInEnabled" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </section>
+
+        <section class="row">
+          <div class="label">签退时间</div>
+          <input id="checkOutTime" type="time" />
+          <label class="switch">
+            <input id="checkOutEnabled" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </section>
+
+        <section class="row">
+          <div class="label">仅工作日</div>
+          <label class="switch">
+            <input id="weekdaysOnly" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </section>
+
+        <section class="row">
+          <div class="label">预提醒</div>
+          <select id="preReminderMinutesIn">
+            <option value="5">提前 5 分钟</option>
+            <option value="10">提前 10 分钟</option>
+            <option value="15">提前 15 分钟</option>
+            <option value="30">提前 30 分钟</option>
+          </select>
+          <label class="switch">
+            <input id="preReminderEnabled" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </section>
+
+        <section class="row">
+          <div class="label">签退预提醒</div>
+          <select id="preReminderMinutesOut">
+            <option value="5">提前 5 分钟</option>
+            <option value="10">提前 10 分钟</option>
+            <option value="15">提前 15 分钟</option>
+            <option value="30">提前 30 分钟</option>
+          </select>
+        </section>
+
+        <section class="row">
+          <div class="label">提醒后隐藏浮窗</div>
+          <label class="switch">
+            <input id="autoHideAfterReminder" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </section>
+
+        <section class="hint">拖动顶部区域可移动浮窗</section>
+
+        <section class="actions">
+          <button id="save">保存设置</button>
+          <button id="testIn" class="ghost">测试签到</button>
+          <button id="testOut" class="ghost">测试签退</button>
+        </section>
+      </div>
+    </div>
+
+    <div id="onboardingOverlay" class="onboarding-overlay hidden">
+      <div class="overlay-card">
+        <div class="overlay-title">欢迎使用 Punch Reminder</div>
+        <div class="overlay-text">先设置签到/签退时间并保存，系统会在后台提醒。</div>
+        <div class="overlay-text">你可以拖动顶部区域移动浮窗，也可以最小化到托盘。</div>
+        <button id="overlayDismiss" class="overlay-button">开始设置</button>
+      </div>
+    </div>
+
+    <script src="renderer.js"></script>
+  </body>
+</html>

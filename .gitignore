@@ -63,7 +63,7 @@ web_modules/
 *.tgz
 
 # Yarn Integrity file
-.yarn-integrity
+yarn-integrity
 
 # dotenv environment variable files
 .env
@@ -137,3 +137,7 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+.DS_Store
+
+.codex/
