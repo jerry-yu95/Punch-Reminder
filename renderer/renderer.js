@@ -68,19 +68,40 @@ document.getElementById('hideWindow').addEventListener('click', () => {
 });
 
 document.getElementById('dismissOnboarding').addEventListener('click', async () => {
-  const settings = await window.punch.getSettings();
-  settings.firstRun = false;
-  await window.punch.setSettings(settings);
   document.getElementById('onboarding').classList.add('hidden');
   document.getElementById('onboardingOverlay').classList.add('hidden');
+  try {
+    const settings = await window.punch.getSettings();
+    settings.firstRun = false;
+    await window.punch.setSettings(settings);
+  } catch (err) {
+    flash('设置保存失败');
+  }
 });
 
 document.getElementById('overlayDismiss').addEventListener('click', async () => {
-  const settings = await window.punch.getSettings();
-  settings.firstRun = false;
-  await window.punch.setSettings(settings);
   document.getElementById('onboarding').classList.add('hidden');
   document.getElementById('onboardingOverlay').classList.add('hidden');
+  try {
+    const settings = await window.punch.getSettings();
+    settings.firstRun = false;
+    await window.punch.setSettings(settings);
+  } catch (err) {
+    flash('设置保存失败');
+  }
+});
+
+document.getElementById('onboardingOverlay').addEventListener('click', async (event) => {
+  if (event.target.id !== 'onboardingOverlay') return;
+  document.getElementById('onboarding').classList.add('hidden');
+  document.getElementById('onboardingOverlay').classList.add('hidden');
+  try {
+    const settings = await window.punch.getSettings();
+    settings.firstRun = false;
+    await window.punch.setSettings(settings);
+  } catch (err) {
+    flash('设置保存失败');
+  }
 });
 
 init();

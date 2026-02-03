@@ -98,6 +98,7 @@ body {
   place-items: center;
   font-size: 12px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  -webkit-app-region: no-drag;
 }
 
 .icon-button:hover {
@@ -129,6 +130,7 @@ input[type='time'] {
   padding: 6px 8px;
   border-radius: 8px;
   color: var(--text);
+  -webkit-app-region: no-drag;
 }
 
 select {
@@ -137,6 +139,7 @@ select {
   padding: 6px 8px;
   border-radius: 8px;
   color: var(--text);
+  -webkit-app-region: no-drag;
 }
 
 .actions {
@@ -181,6 +184,7 @@ select {
   background: rgba(255, 255, 255, 0.6);
   color: var(--text);
   cursor: pointer;
+  -webkit-app-region: no-drag;
 }
 
 .hidden {
@@ -231,6 +235,7 @@ select {
   color: white;
   font-size: 12px;
   cursor: pointer;
+  -webkit-app-region: no-drag;
 }
 
 button {
@@ -243,6 +248,7 @@ button {
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   box-shadow: 0 6px 14px rgba(28, 61, 89, 0.25);
+  -webkit-app-region: no-drag;
 }
 
 button:hover {
