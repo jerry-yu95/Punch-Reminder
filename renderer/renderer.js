@@ -104,4 +104,17 @@ document.getElementById('onboardingOverlay').addEventListener('click', async (ev
   }
 });
 
+document.addEventListener('keydown', async (event) => {
+  if (event.key !== 'Escape') return;
+  document.getElementById('onboarding').classList.add('hidden');
+  document.getElementById('onboardingOverlay').classList.add('hidden');
+  try {
+    const settings = await window.punch.getSettings();
+    settings.firstRun = false;
+    await window.punch.setSettings(settings);
+  } catch (err) {
+    flash('设置保存失败');
+  }
+});
+
 init();

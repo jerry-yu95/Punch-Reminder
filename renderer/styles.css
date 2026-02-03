@@ -201,6 +201,8 @@ select {
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   z-index: 10;
+  pointer-events: auto;
+  -webkit-app-region: no-drag;
 }
 
 .overlay-card {
@@ -212,6 +214,8 @@ select {
   box-shadow: 0 20px 40px rgba(20, 30, 60, 0.25);
   text-align: left;
   animation: fadeIn 0.5s ease;
+  pointer-events: auto;
+  -webkit-app-region: no-drag;
 }
 
 .overlay-title {
@@ -236,6 +240,7 @@ select {
   font-size: 12px;
   cursor: pointer;
   -webkit-app-region: no-drag;
+  pointer-events: auto;
 }
 
 button {
