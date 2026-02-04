@@ -40,7 +40,7 @@ body {
 
 .glass {
   width: 100%;
-  max-width: 360px;
+  max-width: 520px;
   padding: 16px 16px 14px;
   border-radius: 18px;
   background: var(--glass-bg);
@@ -110,9 +110,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 12px;
   padding: 10px 0;
   border-bottom: 1px solid rgba(18, 33, 58, 0.08);
+  flex-wrap: wrap;
 }
 
 .row:last-of-type {
@@ -122,6 +123,7 @@ body {
 .label {
   font-size: 13px;
   color: var(--muted);
+  min-width: 72px;
 }
 
 input[type='time'] {
@@ -144,7 +146,7 @@ select {
 
 .actions {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
   gap: 8px;
   margin-top: 12px;
 }

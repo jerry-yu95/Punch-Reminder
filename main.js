@@ -53,8 +53,10 @@ function createWindow() {
   const settings = loadSettings();
   const windowOptions = {
     width: 360,
-    height: 320,
-    resizable: false,
+    height: 360,
+    resizable: true,
+    minWidth: 320,
+    minHeight: 300,
     transparent: true,
     frame: false,
     alwaysOnTop: true,
