@@ -2,14 +2,10 @@ const robot = document.getElementById('robot');
 const bubble = document.getElementById('bubble');
 
 async function init() {
-  const settings = await window.xiaoxu.getSettings();
-  const assetPath = settings.robotAssetPath || './robot.png';
-  if (assetPath.startsWith('http')) {
-    robot.src = assetPath;
-  } else {
-    const normalized = assetPath.replace(/\\/g, '/');
-    robot.src = normalized.startsWith('file://') ? normalized : `file://${normalized}`;
-  }
+  const robotPath = await window.xiaoxu.getRobotPath();
+  const normalized = robotPath.replace(/\\/g, '/');
+  robot.src = normalized.startsWith('file://') ? normalized : `file://${normalized}`;
+  window.xiaoxu.setInteractive(false);
 }
 
 async function updateSpeech() {
@@ -20,6 +16,14 @@ async function updateSpeech() {
 }
 
 window.addEventListener('mouseenter', updateSpeech);
+
+robot.addEventListener('mouseenter', () => {
+  window.xiaoxu.setInteractive(true);
+});
+
+robot.addEventListener('mouseleave', () => {
+  window.xiaoxu.setInteractive(false);
+});
 
 window.xiaoxu.onMood((mood) => {
   if (mood === 'worry') {

@@ -18,7 +18,7 @@ const store = new Store({
     aiModel: 'gpt-4o-mini',
     aiBaseUrl: 'https://api.openai.com/v1',
     alwaysOnTop: true,
-    clickThrough: false,
+    clickThrough: true,
     robotAssetPath: path.join(__dirname, 'assets', 'robot.png')
   }
 });
@@ -37,15 +37,14 @@ const phrases = JSON.parse(fs.readFileSync(path.join(__dirname, 'local_phrases.j
 
 function createWidgetWindow() {
   const windowOptions = {
-    width: 320,
-    height: 380,
-    resizable: true,
-    minWidth: 240,
-    minHeight: 260,
+    width: 200,
+    height: 200,
+    resizable: false,
+    useContentSize: true,
     transparent: true,
     frame: false,
     skipTaskbar: true,
-    alwaysOnTop: store.get('alwaysOnTop'),
+    alwaysOnTop: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js')
     }
@@ -341,12 +340,22 @@ ipcMain.handle('set-settings', (_event, settings) => {
   store.set(settings);
   if (widgetWindow && !widgetWindow.isDestroyed()) {
     widgetWindow.setAlwaysOnTop(store.get('alwaysOnTop'));
+    widgetWindow.setIgnoreMouseEvents(store.get('clickThrough'), { forward: true });
     widgetWindow.webContents.send('mood', 'normal');
   }
   return true;
 });
 
 ipcMain.handle('get-speech', () => getSpeech());
+ipcMain.handle('get-robot-path', () => path.join(app.getAppPath(), 'assets', 'robot.png'));
+ipcMain.handle('set-interactive', (_event, interactive) => {
+  if (!widgetWindow || widgetWindow.isDestroyed()) return;
+  if (!store.get('clickThrough')) {
+    widgetWindow.setIgnoreMouseEvents(false);
+    return;
+  }
+  widgetWindow.setIgnoreMouseEvents(!interactive, { forward: true });
+});
 
 ipcMain.handle('open-punch-url', () => {
   const url = store.get('punchUrl');

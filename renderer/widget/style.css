@@ -32,7 +32,8 @@ body {
   object-fit: contain;
   opacity: 0.4;
   transition: opacity 0.25s ease;
-  pointer-events: none;
+  pointer-events: auto;
+  -webkit-app-region: no-drag;
 }
 
 .widget:hover #robot {
