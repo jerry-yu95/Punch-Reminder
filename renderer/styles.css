@@ -191,58 +191,6 @@ select {
   display: none;
 }
 
-.onboarding-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(18, 33, 58, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  z-index: 10;
-  pointer-events: auto;
-  -webkit-app-region: no-drag;
-}
-
-.overlay-card {
-  width: 280px;
-  padding: 16px 18px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 20px 40px rgba(20, 30, 60, 0.25);
-  text-align: left;
-  animation: fadeIn 0.5s ease;
-  pointer-events: auto;
-  -webkit-app-region: no-drag;
-}
-
-.overlay-title {
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-
-.overlay-text {
-  font-size: 12px;
-  color: rgba(18, 33, 58, 0.75);
-  margin-bottom: 6px;
-}
-
-.overlay-button {
-  margin-top: 6px;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  color: white;
-  font-size: 12px;
-  cursor: pointer;
-  -webkit-app-region: no-drag;
-  pointer-events: auto;
-}
-
 button {
   border: none;
   padding: 8px 10px;

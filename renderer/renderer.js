@@ -11,13 +11,10 @@ async function init() {
   document.getElementById('autoHideAfterReminder').checked = settings.autoHideAfterReminder;
 
   const onboarding = document.getElementById('onboarding');
-  const overlay = document.getElementById('onboardingOverlay');
   if (settings.firstRun) {
     onboarding.classList.remove('hidden');
-    overlay.classList.remove('hidden');
   } else {
     onboarding.classList.add('hidden');
-    overlay.classList.add('hidden');
   }
 }
 
@@ -69,45 +66,6 @@ document.getElementById('hideWindow').addEventListener('click', () => {
 
 document.getElementById('dismissOnboarding').addEventListener('click', async () => {
   document.getElementById('onboarding').classList.add('hidden');
-  document.getElementById('onboardingOverlay').classList.add('hidden');
-  try {
-    const settings = await window.punch.getSettings();
-    settings.firstRun = false;
-    await window.punch.setSettings(settings);
-  } catch (err) {
-    flash('设置保存失败');
-  }
-});
-
-document.getElementById('overlayDismiss').addEventListener('click', async () => {
-  document.getElementById('onboarding').classList.add('hidden');
-  document.getElementById('onboardingOverlay').classList.add('hidden');
-  try {
-    const settings = await window.punch.getSettings();
-    settings.firstRun = false;
-    await window.punch.setSettings(settings);
-  } catch (err) {
-    flash('设置保存失败');
-  }
-});
-
-document.getElementById('onboardingOverlay').addEventListener('click', async (event) => {
-  if (event.target.id !== 'onboardingOverlay') return;
-  document.getElementById('onboarding').classList.add('hidden');
-  document.getElementById('onboardingOverlay').classList.add('hidden');
-  try {
-    const settings = await window.punch.getSettings();
-    settings.firstRun = false;
-    await window.punch.setSettings(settings);
-  } catch (err) {
-    flash('设置保存失败');
-  }
-});
-
-document.addEventListener('keydown', async (event) => {
-  if (event.key !== 'Escape') return;
-  document.getElementById('onboarding').classList.add('hidden');
-  document.getElementById('onboardingOverlay').classList.add('hidden');
   try {
     const settings = await window.punch.getSettings();
     settings.firstRun = false;
