@@ -53,4 +53,12 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
+          append_body: true
+          body: |
+            ## 下载与安装
+            - macOS：下载 `.dmg`，打开后拖拽到 Applications 即可安装
+            - Windows：下载 `.exe`，双击按向导安装
+
+            ## 常见问题
+            - macOS 首次打开提示“未知开发者”：在“系统设置 → 隐私与安全性”里选择仍要打开
           files: dist-artifacts/**/*
