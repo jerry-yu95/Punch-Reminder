@@ -1,0 +1,68 @@
+:root {
+  --bubble-bg: rgba(255, 255, 255, 0.92);
+  --bubble-text: #1a2c3a;
+  --shadow: rgba(12, 28, 40, 0.25);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: transparent;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.widget {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  position: relative;
+  -webkit-app-region: drag;
+}
+
+#robot {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0.4;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+
+.widget:hover #robot {
+  opacity: 1;
+}
+
+.bubble {
+  position: absolute;
+  bottom: 100%;
+  margin-bottom: 10px;
+  max-width: 240px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--bubble-bg);
+  color: var(--bubble-text);
+  font-size: 12px;
+  line-height: 1.4;
+  box-shadow: 0 12px 22px var(--shadow);
+  -webkit-app-region: no-drag;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.widget:hover .bubble {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hidden {
+  display: none;
+}

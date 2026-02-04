@@ -1,0 +1,44 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600&display=swap');
+
+* {
+  box-sizing: border-box;
+  font-family: 'Manrope', 'SF Pro Display', 'Segoe UI', sans-serif;
+}
+
+body {
+  margin: 0;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  width: 100vw;
+  height: 100vh;
+}
+
+.card {
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 18px 30px rgba(18, 32, 48, 0.25);
+  min-width: 220px;
+  display: grid;
+  gap: 10px;
+}
+
+.title {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.body {
+  font-size: 12px;
+  color: rgba(18, 32, 48, 0.7);
+}
+
+button {
+  border: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #2b7de9;
+  color: white;
+  cursor: pointer;
+}

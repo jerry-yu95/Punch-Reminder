@@ -1,118 +1,98 @@
-const { app, BrowserWindow, Tray, Menu, ipcMain, Notification, nativeImage } = require('electron');
+const { app, BrowserWindow, Tray, Menu, ipcMain, Notification, nativeImage, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const Store = require('electron-store');
 
-let mainWindow;
+const store = new Store({
+  defaults: {
+    nickname: '小主',
+    checkInTime: '09:05',
+    checkOutTime: '18:30',
+    punchUrl: '',
+    overtimeTime: '',
+    weatherKey: '',
+    weatherLat: 0,
+    weatherLon: 0,
+    aiProvider: 'local',
+    aiKey: '',
+    aiModel: 'gpt-4o-mini',
+    aiBaseUrl: 'https://api.openai.com/v1',
+    alwaysOnTop: true,
+    robotAssetPath: path.join(__dirname, 'assets', 'robot.png')
+  }
+});
+
+let widgetWindow;
+let settingsWindow;
 let reminderWindow;
 let tray;
 let isQuitting = false;
-const SETTINGS_FILE = 'settings.json';
+let lastReminder = { checkIn: '', checkOut: '', sedentary: '' };
+let cachedWorkday = { date: '', isWorkday: true };
+let cachedWeather = { date: '', isBad: false, summary: '' };
+let lastSedentaryAt = Date.now();
 
-const defaultSettings = {
-  checkInEnabled: true,
-  checkOutEnabled: true,
-  checkInTime: '09:30',
-  checkOutTime: '18:30',
-  weekdaysOnly: true,
-  preReminderEnabled: true,
-  preReminderMinutesIn: 10,
-  preReminderMinutesOut: 10,
-  autoHideAfterReminder: true,
-  windowPosition: null,
-  firstRun: true,
-  shownTrayTip: false,
-  lastNotified: {
-    checkIn: '',
-    checkOut: '',
-    checkInPre: '',
-    checkOutPre: ''
-  }
-};
+const phrases = JSON.parse(fs.readFileSync(path.join(__dirname, 'local_phrases.json'), 'utf-8'));
 
-function getUserDataPath() {
-  return app.getPath('userData');
-}
-
-function loadSettings() {
-  const filePath = path.join(getUserDataPath(), SETTINGS_FILE);
-  try {
-    const raw = fs.readFileSync(filePath, 'utf-8');
-    const parsed = JSON.parse(raw);
-    return { ...defaultSettings, ...parsed, lastNotified: { ...defaultSettings.lastNotified, ...parsed.lastNotified } };
-  } catch (err) {
-    return { ...defaultSettings };
-  }
-}
-
-function saveSettings(settings) {
-  const filePath = path.join(getUserDataPath(), SETTINGS_FILE);
-  fs.writeFileSync(filePath, JSON.stringify(settings, null, 2));
-}
-
-function createWindow() {
-  const settings = loadSettings();
+function createWidgetWindow() {
   const windowOptions = {
-    width: 360,
-    height: 360,
+    width: 320,
+    height: 380,
     resizable: true,
-    minWidth: 320,
-    minHeight: 300,
+    minWidth: 240,
+    minHeight: 260,
     transparent: true,
     frame: false,
-    alwaysOnTop: true,
     skipTaskbar: true,
-    titleBarStyle: 'hidden',
-    vibrancy: 'sidebar',
-    visualEffectState: 'active',
+    alwaysOnTop: store.get('alwaysOnTop'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js')
     }
   };
 
-  if (settings.windowPosition && Array.isArray(settings.windowPosition)) {
-    windowOptions.x = settings.windowPosition[0];
-    windowOptions.y = settings.windowPosition[1];
+  widgetWindow = new BrowserWindow(windowOptions);
+  widgetWindow.loadFile(path.join(__dirname, 'renderer', 'widget', 'index.html'));
+
+  widgetWindow.on('close', (event) => {
+    if (isQuitting) return;
+    event.preventDefault();
+    widgetWindow.hide();
+  });
+
+  widgetWindow.on('closed', () => {
+    widgetWindow = null;
+  });
+
+  widgetWindow.webContents.on('context-menu', () => {
+    showWidgetMenu();
+  });
+}
+
+function createSettingsWindow() {
+  if (settingsWindow && !settingsWindow.isDestroyed()) {
+    settingsWindow.focus();
+    return;
   }
 
-  mainWindow = new BrowserWindow({
-    ...windowOptions
-  });
-
-  mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
-
-  mainWindow.on('close', (event) => {
-    if (isQuitting) return;
-    // Keep app running in tray; hide instead of destroying the window.
-    event.preventDefault();
-    mainWindow.hide();
-  });
-
-  mainWindow.on('closed', () => {
-    mainWindow = null;
-  });
-
-  mainWindow.on('blur', () => {
-    // Subtle auto-hide on blur for quick dismiss
-    if (mainWindow && !mainWindow.webContents.isDevToolsOpened()) {
-      mainWindow.hide();
+  settingsWindow = new BrowserWindow({
+    width: 560,
+    height: 720,
+    resizable: true,
+    title: '小序设置',
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js')
     }
   });
-
-  let saveTimer = null;
-  mainWindow.on('move', () => {
-    if (saveTimer) clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => {
-      const currentSettings = loadSettings();
-      currentSettings.windowPosition = mainWindow.getPosition();
-      saveSettings(currentSettings);
-    }, 300);
+  settingsWindow.loadFile(path.join(__dirname, 'renderer', 'settings', 'index.html'));
+  settingsWindow.on('closed', () => {
+    settingsWindow = null;
   });
 }
 
 function createReminderWindow() {
   reminderWindow = new BrowserWindow({
     width: 260,
-    height: 120,
+    height: 150,
     resizable: false,
     transparent: true,
     frame: false,
@@ -124,12 +104,7 @@ function createReminderWindow() {
     }
   });
 
-  reminderWindow.loadFile(path.join(__dirname, 'renderer', 'reminder.html'));
-  reminderWindow.webContents.on('did-finish-load', () => {
-    if (pendingReminderPayload) {
-      reminderWindow.webContents.send('reminder', pendingReminderPayload);
-    }
-  });
+  reminderWindow.loadFile(path.join(__dirname, 'renderer', 'reminder', 'index.html'));
   reminderWindow.on('closed', () => {
     reminderWindow = null;
   });
@@ -139,44 +114,50 @@ function createTray() {
   const iconPath = path.join(__dirname, 'assets', 'tray.png');
   let trayImage = nativeImage.createFromPath(iconPath);
   if (trayImage.isEmpty()) {
-    const base64Icon =
-      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=';
-    trayImage = nativeImage
-      .createFromBuffer(Buffer.from(base64Icon, 'base64'))
-      .resize({ width: 16, height: 16 });
+    trayImage = nativeImage.createFromBuffer(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=', 'base64')).resize({ width: 16, height: 16 });
   }
   tray = new Tray(trayImage);
-  const contextMenu = Menu.buildFromTemplate([
-    {
-      label: 'Show / Hide',
-      click: () => toggleWindow()
-    },
-    {
-      label: 'Quit',
-      click: () => app.quit()
-    }
-  ]);
-  tray.setToolTip('Punch Reminder');
-  tray.setContextMenu(contextMenu);
-  tray.on('click', () => toggleWindow());
+  tray.setToolTip('小序');
+  tray.setContextMenu(Menu.buildFromTemplate([
+    { label: '打开设置', click: () => createSettingsWindow() },
+    { label: '显示/隐藏挂件', click: () => toggleWidget() },
+    { type: 'separator' },
+    { label: '退出', click: () => app.quit() }
+  ]));
+  tray.on('click', () => toggleWidget());
 }
 
-function toggleWindow() {
-  if (!mainWindow || mainWindow.isDestroyed()) {
-    createWindow();
+function showWidgetMenu() {
+  const menu = Menu.buildFromTemplate([
+    { label: '打开设置', click: () => createSettingsWindow() },
+    {
+      label: store.get('alwaysOnTop') ? '取消置顶' : '置顶显示',
+      click: () => {
+        const next = !store.get('alwaysOnTop');
+        store.set('alwaysOnTop', next);
+        if (widgetWindow && !widgetWindow.isDestroyed()) {
+          widgetWindow.setAlwaysOnTop(next);
+        }
+      }
+    },
+    { label: '隐藏挂件', click: () => widgetWindow.hide() },
+    { type: 'separator' },
+    { label: '退出', click: () => app.quit() }
+  ]);
+  menu.popup({ window: widgetWindow });
+}
+
+function toggleWidget() {
+  if (!widgetWindow || widgetWindow.isDestroyed()) {
+    createWidgetWindow();
     return;
   }
-  if (mainWindow.isVisible()) {
-    mainWindow.hide();
+  if (widgetWindow.isVisible()) {
+    widgetWindow.hide();
   } else {
-    mainWindow.show();
-    mainWindow.focus();
+    widgetWindow.show();
+    widgetWindow.focus();
   }
-}
-
-function isWeekday(date) {
-  const day = date.getDay();
-  return day >= 1 && day <= 5;
 }
 
 function formatDateKey(date) {
@@ -188,122 +169,178 @@ function timeToMinutes(timeStr) {
   return hh * 60 + mm;
 }
 
-function shouldNotifyAt(nowMinutes, targetMinutes, lastNotifiedDate, now) {
-  return nowMinutes === targetMinutes && formatDateKey(now) !== lastNotifiedDate;
+function randomFrom(list) {
+  if (!list || list.length === 0) return '';
+  return list[Math.floor(Math.random() * list.length)];
 }
 
-function sendReminder(type, settings) {
-  const isPre = type === 'checkInPre' || type === 'checkOutPre';
-  const isCheckIn = type === 'checkIn' || type === 'checkInPre';
-  const title = isCheckIn ? '签到提醒' : '签退提醒';
-  const preMinutes = isCheckIn ? settings.preReminderMinutesIn : settings.preReminderMinutesOut;
-  const body = isPre
-    ? `${preMinutes} 分钟后需要${isCheckIn ? '签到' : '签退'}，别忘了。`
-    : `到了${isCheckIn ? '签到' : '签退'}时间，记得打卡。`;
-  new Notification({ title, body }).show();
-  showReminderWindow({ title, body }, settings);
-}
-
-let pendingReminderPayload = null;
-function showReminderWindow(payload, settings) {
-  if (!reminderWindow) createReminderWindow();
-  pendingReminderPayload = payload;
+async function isWorkday(date) {
+  const key = formatDateKey(date);
+  if (cachedWorkday.date === key) return cachedWorkday.isWorkday;
   try {
-    reminderWindow.showInactive();
+    const response = await fetch(`https://timor.tech/api/holiday/info/${key}`);
+    const data = await response.json();
+    const type = data?.type?.type;
+    const isWork = type === 0 || type === 3;
+    cachedWorkday = { date: key, isWorkday: isWork };
+    return isWork;
   } catch (err) {
-    reminderWindow.show();
+    return true;
   }
+}
+
+async function updateWeather(date) {
+  const key = formatDateKey(date);
+  if (cachedWeather.date === key) return cachedWeather;
+  const apiKey = store.get('weatherKey');
+  const lat = store.get('weatherLat');
+  const lon = store.get('weatherLon');
+  if (!apiKey || !lat || !lon) {
+    cachedWeather = { date: key, isBad: false, summary: '' };
+    return cachedWeather;
+  }
+  try {
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=zh_cn`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const main = data.weather?.[0]?.main || '';
+    const bad = ['Rain', 'Snow', 'Thunderstorm', 'Extreme'].includes(main);
+    cachedWeather = { date: key, isBad: bad, summary: data.weather?.[0]?.description || '' };
+    return cachedWeather;
+  } catch (err) {
+    cachedWeather = { date: key, isBad: false, summary: '' };
+    return cachedWeather;
+  }
+}
+
+async function getSpeech() {
+  const provider = store.get('aiProvider');
+  if (!provider || provider === 'local' || !store.get('aiKey')) {
+    const hour = new Date().getHours();
+    if (hour >= 6 && hour < 11) return randomFrom(phrases.morning);
+    if (hour >= 11 && hour < 14) return randomFrom(phrases.noon);
+    if (hour >= 14 && hour < 20) return randomFrom(phrases.on_time);
+    return randomFrom(phrases.late);
+  }
+
+  const nickname = store.get('nickname');
+  const mood = '温柔、懂产品经理辛苦、偶尔傲娇的猫系机器人';
+  const now = new Date().toLocaleString();
+  const weather = cachedWeather.summary || '未知天气';
+  const overtime = store.get('overtimeTime') || '未设置';
+  const prompt = `你是${mood}，称呼对方为${nickname}。现在时间${now}，天气${weather}，预计下班${overtime}。请生成一句20字以内的中文短句。`;
+
+  try {
+    if (provider === 'gemini') {
+      const apiKey = store.get('aiKey');
+      const model = store.get('aiModel') || 'gemini-1.5-flash';
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      });
+      const data = await res.json();
+      return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || randomFrom(phrases.on_time);
+    }
+
+    const baseUrl = store.get('aiBaseUrl') || 'https://api.openai.com/v1';
+    const res = await fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${store.get('aiKey')}`
+      },
+      body: JSON.stringify({
+        model: store.get('aiModel') || 'gpt-4o-mini',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.8,
+        max_tokens: 60
+      })
+    });
+    const data = await res.json();
+    return data.choices?.[0]?.message?.content?.trim() || randomFrom(phrases.on_time);
+  } catch (err) {
+    return randomFrom(phrases.on_time);
+  }
+}
+
+function showReminder(payload) {
+  if (!reminderWindow || reminderWindow.isDestroyed()) {
+    createReminderWindow();
+  }
+  reminderWindow.show();
   reminderWindow.webContents.send('reminder', payload);
-  if (settings.autoHideAfterReminder) {
-    setTimeout(() => {
-      if (reminderWindow && reminderWindow.isVisible()) {
-        reminderWindow.hide();
-      }
-    }, 5500);
+}
+
+async function schedulerTick() {
+  const now = new Date();
+  const dateKey = formatDateKey(now);
+
+  const workday = await isWorkday(now);
+  if (!workday) return;
+
+  const weather = await updateWeather(now);
+  const extraAdvance = weather.isBad ? 10 : 0;
+
+  const checkIn = timeToMinutes(store.get('checkInTime')) - extraAdvance;
+  const checkOut = timeToMinutes(store.get('checkOutTime')) - extraAdvance;
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+  if (nowMinutes === checkIn && lastReminder.checkIn !== dateKey) {
+    lastReminder.checkIn = dateKey;
+    showReminder({ title: '签到提醒', body: weather.isBad ? '今天可能有雨，提前打卡哦。' : '到签到时间啦。', showButton: true });
+    new Notification({ title: '签到提醒', body: '到签到时间啦。' }).show();
+  }
+
+  if (nowMinutes === checkOut && lastReminder.checkOut !== dateKey) {
+    lastReminder.checkOut = dateKey;
+    showReminder({ title: '签退提醒', body: '到签退时间啦。', showButton: true });
+    new Notification({ title: '签退提醒', body: '到签退时间啦。' }).show();
+  }
+
+  const overtime = store.get('overtimeTime');
+  if (overtime) {
+    const overtimeMinutes = timeToMinutes(overtime);
+    if (nowMinutes === overtimeMinutes - 15 && widgetWindow) {
+      widgetWindow.webContents.send('mood', 'worry');
+    }
+  }
+
+  if (Date.now() - lastSedentaryAt >= 2 * 60 * 60 * 1000) {
+    lastSedentaryAt = Date.now();
+    showReminder({ title: '久坐提醒', body: randomFrom(phrases.sedentary), showButton: false });
+    new Notification({ title: '久坐提醒', body: randomFrom(phrases.sedentary) }).show();
   }
 }
 
-function startScheduler() {
-  setInterval(() => {
-    const settings = loadSettings();
-    const now = new Date();
-    if (settings.weekdaysOnly && !isWeekday(now)) return;
-
-    const nowMinutes = now.getHours() * 60 + now.getMinutes();
-    const checkInMinutes = timeToMinutes(settings.checkInTime);
-    const checkOutMinutes = timeToMinutes(settings.checkOutTime);
-
-    if (settings.preReminderEnabled) {
-      const preIn = checkInMinutes - settings.preReminderMinutesIn;
-      if (preIn >= 0 && settings.checkInEnabled && shouldNotifyAt(nowMinutes, preIn, settings.lastNotified.checkInPre, now)) {
-        sendReminder('checkInPre', settings);
-        settings.lastNotified.checkInPre = formatDateKey(now);
-        saveSettings(settings);
-      }
-      const preOut = checkOutMinutes - settings.preReminderMinutesOut;
-      if (preOut >= 0 && settings.checkOutEnabled && shouldNotifyAt(nowMinutes, preOut, settings.lastNotified.checkOutPre, now)) {
-        sendReminder('checkOutPre', settings);
-        settings.lastNotified.checkOutPre = formatDateKey(now);
-        saveSettings(settings);
-      }
-    }
-
-    if (settings.checkInEnabled && shouldNotifyAt(nowMinutes, checkInMinutes, settings.lastNotified.checkIn, now)) {
-      sendReminder('checkIn', settings);
-      settings.lastNotified.checkIn = formatDateKey(now);
-      saveSettings(settings);
-    }
-
-    if (settings.checkOutEnabled && shouldNotifyAt(nowMinutes, checkOutMinutes, settings.lastNotified.checkOut, now)) {
-      sendReminder('checkOut', settings);
-      settings.lastNotified.checkOut = formatDateKey(now);
-      saveSettings(settings);
-    }
-  }, 30 * 1000);
-}
-
-ipcMain.handle('get-settings', () => loadSettings());
+ipcMain.handle('get-settings', () => store.store);
 ipcMain.handle('set-settings', (_event, settings) => {
-  saveSettings(settings);
-  return true;
-});
-
-ipcMain.handle('test-notify', (_event, type) => {
-  const settings = loadSettings();
-  sendReminder(type, settings);
-  return true;
-});
-
-ipcMain.handle('reset-window-position', () => {
-  const settings = loadSettings();
-  settings.windowPosition = null;
-  saveSettings(settings);
-  if (mainWindow) {
-    mainWindow.center();
+  store.set(settings);
+  if (widgetWindow && !widgetWindow.isDestroyed()) {
+    widgetWindow.setAlwaysOnTop(store.get('alwaysOnTop'));
+    widgetWindow.webContents.send('mood', 'normal');
   }
   return true;
 });
 
-ipcMain.handle('hide-main-window', () => {
-  const settings = loadSettings();
-  if (mainWindow) {
-    mainWindow.hide();
-  }
-  if (!settings.shownTrayTip) {
-    new Notification({ title: '已最小化到托盘', body: '提醒会在后台继续运行。' }).show();
-    settings.shownTrayTip = true;
-    saveSettings(settings);
-  }
-  return true;
+ipcMain.handle('get-speech', () => getSpeech());
+
+ipcMain.handle('open-punch-url', () => {
+  const url = store.get('punchUrl');
+  if (url) shell.openExternal(url);
 });
+
+ipcMain.handle('show-settings', () => createSettingsWindow());
 
 app.whenReady().then(() => {
   if (process.platform === 'darwin') {
     app.dock.hide();
   }
-  createWindow();
+  createWidgetWindow();
   createTray();
-  startScheduler();
+  createReminderWindow();
+  setInterval(schedulerTick, 60 * 1000);
 });
 
 app.on('before-quit', () => {
