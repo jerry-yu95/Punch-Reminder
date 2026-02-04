@@ -8,9 +8,6 @@ const storeDefaults = {
   checkOutTime: '18:30',
   punchUrl: '',
   overtimeTime: '',
-  weatherKey: '',
-  weatherLat: 0,
-  weatherLon: 0,
   aiProvider: 'local',
   aiKey: '',
   aiModel: 'gpt-4o-mini',
@@ -32,21 +29,23 @@ let tray;
 let isQuitting = false;
 let lastReminder = { checkIn: '', checkOut: '', sedentary: '' };
 let cachedWorkday = { date: '', isWorkday: true };
-let cachedWeather = { date: '', isBad: false, summary: '' };
+let cachedWeather = { date: '', isBad: false, summary: '', temp: null };
+let cachedLocation = { date: '', lat: null, lon: null };
 let lastSedentaryAt = Date.now();
 
 const phrases = JSON.parse(fs.readFileSync(path.join(__dirname, 'local_phrases.json'), 'utf-8'));
 
 function createWidgetWindow() {
   const windowOptions = {
-    width: 200,
-    height: 200,
+    width: 180,
+    height: 180,
     resizable: false,
     useContentSize: true,
-    transparent: true,
+    transparent: false,
     frame: false,
     skipTaskbar: true,
     alwaysOnTop: true,
+    backgroundColor: '#EAF2FF',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js')
     }
@@ -212,26 +211,51 @@ async function isWorkday(date) {
   }
 }
 
+async function getLocationByIP(dateKey) {
+  if (cachedLocation.date === dateKey && cachedLocation.lat && cachedLocation.lon) {
+    return cachedLocation;
+  }
+  try {
+    const res = await fetch('https://ipapi.co/json/');
+    const data = await res.json();
+    cachedLocation = {
+      date: dateKey,
+      lat: Number(data.latitude),
+      lon: Number(data.longitude)
+    };
+    return cachedLocation;
+  } catch (err) {
+    return { date: dateKey, lat: null, lon: null };
+  }
+}
+
 async function updateWeather(date) {
   const key = formatDateKey(date);
   if (cachedWeather.date === key) return cachedWeather;
-  const apiKey = store.get('weatherKey');
-  const lat = store.get('weatherLat');
-  const lon = store.get('weatherLon');
-  if (!apiKey || !lat || !lon) {
-    cachedWeather = { date: key, isBad: false, summary: '' };
+  let lat = store.get('weatherLat');
+  let lon = store.get('weatherLon');
+  if (!lat || !lon) {
+    const loc = await getLocationByIP(key);
+    lat = loc.lat;
+    lon = loc.lon;
+  }
+  if (!lat || !lon) {
+    cachedWeather = { date: key, isBad: false, summary: '', temp: null };
     return cachedWeather;
   }
   try {
-    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=zh_cn`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=auto`;
     const res = await fetch(url);
     const data = await res.json();
-    const main = data.weather?.[0]?.main || '';
-    const bad = ['Rain', 'Snow', 'Thunderstorm', 'Extreme'].includes(main);
-    cachedWeather = { date: key, isBad: bad, summary: data.weather?.[0]?.description || '' };
+    const code = data.current_weather?.weathercode ?? null;
+    const temp = data.current_weather?.temperature ?? null;
+    const badCodes = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 71, 73, 75, 77, 80, 81, 82, 85, 86, 95, 96, 99];
+    const bad = code !== null && badCodes.includes(code);
+    const summary = code === null ? '' : `天气码 ${code}` + (temp !== null ? `，${temp}°C` : '');
+    cachedWeather = { date: key, isBad: bad, summary, temp };
     return cachedWeather;
   } catch (err) {
-    cachedWeather = { date: key, isBad: false, summary: '' };
+    cachedWeather = { date: key, isBad: false, summary: '', temp: null };
     return cachedWeather;
   }
 }

@@ -24,6 +24,9 @@ body {
   place-items: center;
   position: relative;
   -webkit-app-region: drag;
+  background: rgba(230, 245, 255, 0.95);
+  border-radius: 999px;
+  box-shadow: 0 14px 26px rgba(40, 80, 120, 0.25);
 }
 
 #robot {

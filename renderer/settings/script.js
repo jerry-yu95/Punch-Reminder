@@ -5,7 +5,6 @@ async function init() {
   document.getElementById('checkOutTime').value = settings.checkOutTime;
   document.getElementById('punchUrl').value = settings.punchUrl;
   document.getElementById('overtimeTime').value = settings.overtimeTime;
-  document.getElementById('weatherKey').value = settings.weatherKey;
   document.getElementById('weatherLat').value = settings.weatherLat;
   document.getElementById('weatherLon').value = settings.weatherLon;
   document.getElementById('aiProvider').value = settings.aiProvider;
@@ -14,6 +13,7 @@ async function init() {
   document.getElementById('aiBaseUrl').value = settings.aiBaseUrl;
   document.getElementById('alwaysOnTop').checked = settings.alwaysOnTop;
   document.getElementById('clickThrough').checked = settings.clickThrough;
+  updateAiFields();
 }
 
 async function save() {
@@ -23,7 +23,6 @@ async function save() {
   settings.checkOutTime = document.getElementById('checkOutTime').value || '18:30';
   settings.punchUrl = document.getElementById('punchUrl').value.trim();
   settings.overtimeTime = document.getElementById('overtimeTime').value;
-  settings.weatherKey = document.getElementById('weatherKey').value.trim();
   settings.weatherLat = Number(document.getElementById('weatherLat').value);
   settings.weatherLon = Number(document.getElementById('weatherLon').value);
   settings.aiProvider = document.getElementById('aiProvider').value;
@@ -37,5 +36,30 @@ async function save() {
 }
 
 document.getElementById('save').addEventListener('click', save);
+document.getElementById('aiProvider').addEventListener('change', updateAiFields);
+document.getElementById('toggleAdvanced').addEventListener('click', () => {
+  document.getElementById('aiAdvancedFields').classList.toggle('hidden');
+});
 
 init();
+
+function updateAiFields() {
+  const provider = document.getElementById('aiProvider').value;
+  const isLocal = provider === 'local';
+  const fields = document.getElementById('aiFields');
+  const modelField = document.getElementById('aiModelField');
+  const advToggle = document.getElementById('aiAdvancedToggle');
+  const advFields = document.getElementById('aiAdvancedFields');
+
+  if (isLocal) {
+    fields.classList.add('hidden');
+    modelField.classList.add('hidden');
+    advToggle.classList.add('hidden');
+    advFields.classList.add('hidden');
+    return;
+  }
+
+  fields.classList.remove('hidden');
+  modelField.classList.remove('hidden');
+  advToggle.classList.remove('hidden');
+}

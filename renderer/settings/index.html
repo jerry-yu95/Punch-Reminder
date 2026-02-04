@@ -35,11 +35,6 @@
         <input id="overtimeTime" type="time" />
       </div>
 
-      <div class="section">
-        <label>OpenWeather API Key</label>
-        <input id="weatherKey" type="text" placeholder="" />
-      </div>
-
       <div class="section grid">
         <div>
           <label>天气纬度</label>
@@ -52,7 +47,7 @@
       </div>
 
       <div class="section">
-        <label>AI 模式</label>
+        <label>灵动模式</label>
         <select id="aiProvider">
           <option value="local">本地预设</option>
           <option value="openai">OpenAI</option>
@@ -61,17 +56,21 @@
         </select>
       </div>
 
-      <div class="section">
+      <div id="aiFields" class="section hidden">
         <label>API Key</label>
         <input id="aiKey" type="text" placeholder="" />
       </div>
 
-      <div class="section">
+      <div id="aiModelField" class="section hidden">
         <label>模型名</label>
         <input id="aiModel" type="text" placeholder="gpt-4o-mini / gemini-1.5-flash / deepseek-chat" />
       </div>
 
-      <div class="section">
+      <div class="section hidden" id="aiAdvancedToggle">
+        <button type="button" id="toggleAdvanced">高级设置</button>
+      </div>
+
+      <div id="aiAdvancedFields" class="section hidden">
         <label>API Base URL</label>
         <input id="aiBaseUrl" type="text" placeholder="OpenAI/DeepSeek 兼容地址" />
       </div>
