@@ -4,6 +4,7 @@ contextBridge.exposeInMainWorld('xiaoxu', {
   getSettings: () => ipcRenderer.invoke('get-settings'),
   setSettings: (settings) => ipcRenderer.invoke('set-settings', settings),
   getSpeech: () => ipcRenderer.invoke('get-speech'),
+  getWeatherSummary: () => ipcRenderer.invoke('get-weather-summary'),
   getRobotPath: () => ipcRenderer.invoke('get-robot-path'),
   setInteractive: (interactive) => ipcRenderer.invoke('set-interactive', interactive),
   openPunchUrl: () => ipcRenderer.invoke('open-punch-url'),

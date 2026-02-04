@@ -229,16 +229,46 @@ async function getLocationByIP(dateKey) {
   }
 }
 
+function weatherCodeToText(code) {
+  const mapping = {
+    0: '晴朗',
+    1: '晴间多云',
+    2: '多云',
+    3: '阴天',
+    45: '有雾',
+    48: '雾凇',
+    51: '小毛毛雨',
+    53: '毛毛雨',
+    55: '毛毛雨偏大',
+    56: '冻毛毛雨',
+    57: '冻毛毛雨偏大',
+    61: '小雨',
+    63: '中雨',
+    65: '大雨',
+    66: '冻雨',
+    67: '冻雨偏大',
+    71: '小雪',
+    73: '中雪',
+    75: '大雪',
+    77: '雪粒',
+    80: '小阵雨',
+    81: '阵雨',
+    82: '强阵雨',
+    85: '小阵雪',
+    86: '阵雪',
+    95: '雷暴',
+    96: '雷暴伴小冰雹',
+    99: '雷暴伴大冰雹'
+  };
+  return mapping[code] || '天气变化';
+}
+
 async function updateWeather(date) {
   const key = formatDateKey(date);
   if (cachedWeather.date === key) return cachedWeather;
-  let lat = store.get('weatherLat');
-  let lon = store.get('weatherLon');
-  if (!lat || !lon) {
-    const loc = await getLocationByIP(key);
-    lat = loc.lat;
-    lon = loc.lon;
-  }
+  const loc = await getLocationByIP(key);
+  const lat = loc.lat;
+  const lon = loc.lon;
   if (!lat || !lon) {
     cachedWeather = { date: key, isBad: false, summary: '', temp: null };
     return cachedWeather;
@@ -251,7 +281,7 @@ async function updateWeather(date) {
     const temp = data.current_weather?.temperature ?? null;
     const badCodes = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 71, 73, 75, 77, 80, 81, 82, 85, 86, 95, 96, 99];
     const bad = code !== null && badCodes.includes(code);
-    const summary = code === null ? '' : `天气码 ${code}` + (temp !== null ? `，${temp}°C` : '');
+    const summary = code === null ? '' : `${weatherCodeToText(code)}${temp !== null ? `，${temp}°C` : ''}`;
     cachedWeather = { date: key, isBad: bad, summary, temp };
     return cachedWeather;
   } catch (err) {
@@ -382,6 +412,10 @@ ipcMain.handle('set-interactive', (_event, interactive) => {
   }
   widgetWindow.setIgnoreMouseEvents(!interactive, { forward: true });
 });
+ipcMain.handle('get-weather-summary', async () => {
+  const weather = await updateWeather(new Date());
+  return weather.summary || '';
+});
 
 ipcMain.handle('open-punch-url', () => {
   const url = store.get('punchUrl');
@@ -398,6 +432,7 @@ app.whenReady().then(async () => {
   createWidgetWindow();
   createTray();
   createReminderWindow();
+  await updateWeather(new Date());
   setInterval(schedulerTick, 60 * 1000);
 });
 

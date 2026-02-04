@@ -6,6 +6,15 @@ async function init() {
   const normalized = robotPath.replace(/\\/g, '/');
   robot.src = normalized.startsWith('file://') ? normalized : `file://${normalized}`;
   window.xiaoxu.setInteractive(false);
+
+  const weather = await window.xiaoxu.getWeatherSummary();
+  if (weather) {
+    bubble.textContent = `今日${weather}`;
+    bubble.classList.remove('hidden');
+    setTimeout(() => {
+      bubble.classList.add('hidden');
+    }, 4000);
+  }
 }
 
 async function updateSpeech() {
