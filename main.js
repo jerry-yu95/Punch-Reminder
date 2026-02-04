@@ -1,27 +1,29 @@
 const { app, BrowserWindow, Tray, Menu, ipcMain, Notification, nativeImage, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const Store = require('electron-store');
+let store;
+const storeDefaults = {
+  nickname: '小主',
+  checkInTime: '09:05',
+  checkOutTime: '18:30',
+  punchUrl: '',
+  overtimeTime: '',
+  weatherKey: '',
+  weatherLat: 0,
+  weatherLon: 0,
+  aiProvider: 'local',
+  aiKey: '',
+  aiModel: 'gpt-4o-mini',
+  aiBaseUrl: 'https://api.openai.com/v1',
+  alwaysOnTop: true,
+  clickThrough: true,
+  robotAssetPath: path.join(__dirname, 'assets', 'robot.png')
+};
 
-const store = new Store({
-  defaults: {
-    nickname: '小主',
-    checkInTime: '09:05',
-    checkOutTime: '18:30',
-    punchUrl: '',
-    overtimeTime: '',
-    weatherKey: '',
-    weatherLat: 0,
-    weatherLon: 0,
-    aiProvider: 'local',
-    aiKey: '',
-    aiModel: 'gpt-4o-mini',
-    aiBaseUrl: 'https://api.openai.com/v1',
-    alwaysOnTop: true,
-    clickThrough: true,
-    robotAssetPath: path.join(__dirname, 'assets', 'robot.png')
-  }
-});
+async function initStore() {
+  const { default: Store } = await import('electron-store');
+  store = new Store({ defaults: storeDefaults });
+}
 
 let widgetWindow;
 let settingsWindow;
@@ -364,7 +366,8 @@ ipcMain.handle('open-punch-url', () => {
 
 ipcMain.handle('show-settings', () => createSettingsWindow());
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  await initStore();
   if (process.platform === 'darwin') {
     app.dock.hide();
   }
