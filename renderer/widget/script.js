@@ -25,6 +25,14 @@ robot.addEventListener('mouseleave', () => {
   window.xiaoxu.setInteractive(false);
 });
 
+robot.addEventListener('mousedown', () => {
+  window.xiaoxu.setInteractive(true);
+});
+
+robot.addEventListener('mouseup', () => {
+  window.xiaoxu.setInteractive(false);
+});
+
 window.xiaoxu.onMood((mood) => {
   if (mood === 'worry') {
     bubble.style.background = 'rgba(255, 235, 235, 0.95)';
