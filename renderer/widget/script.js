@@ -3,7 +3,13 @@ const bubble = document.getElementById('bubble');
 
 async function init() {
   const settings = await window.xiaoxu.getSettings();
-  robot.src = settings.robotAssetPath || './robot.png';
+  const assetPath = settings.robotAssetPath || './robot.png';
+  if (assetPath.startsWith('http')) {
+    robot.src = assetPath;
+  } else {
+    const normalized = assetPath.replace(/\\/g, '/');
+    robot.src = normalized.startsWith('file://') ? normalized : `file://${normalized}`;
+  }
 }
 
 async function updateSpeech() {

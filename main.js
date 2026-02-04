@@ -18,6 +18,7 @@ const store = new Store({
     aiModel: 'gpt-4o-mini',
     aiBaseUrl: 'https://api.openai.com/v1',
     alwaysOnTop: true,
+    clickThrough: false,
     robotAssetPath: path.join(__dirname, 'assets', 'robot.png')
   }
 });
@@ -52,6 +53,7 @@ function createWidgetWindow() {
 
   widgetWindow = new BrowserWindow(windowOptions);
   widgetWindow.loadFile(path.join(__dirname, 'renderer', 'widget', 'index.html'));
+  widgetWindow.setIgnoreMouseEvents(store.get('clickThrough'), { forward: true });
 
   widgetWindow.on('close', (event) => {
     if (isQuitting) return;
@@ -121,6 +123,16 @@ function createTray() {
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: '打开设置', click: () => createSettingsWindow() },
     { label: '显示/隐藏挂件', click: () => toggleWidget() },
+    {
+      label: store.get('clickThrough') ? '关闭鼠标穿透' : '开启鼠标穿透',
+      click: () => {
+        const next = !store.get('clickThrough');
+        store.set('clickThrough', next);
+        if (widgetWindow && !widgetWindow.isDestroyed()) {
+          widgetWindow.setIgnoreMouseEvents(next, { forward: true });
+        }
+      }
+    },
     { type: 'separator' },
     { label: '退出', click: () => app.quit() }
   ]));
@@ -137,6 +149,16 @@ function showWidgetMenu() {
         store.set('alwaysOnTop', next);
         if (widgetWindow && !widgetWindow.isDestroyed()) {
           widgetWindow.setAlwaysOnTop(next);
+        }
+      }
+    },
+    {
+      label: store.get('clickThrough') ? '关闭鼠标穿透' : '开启鼠标穿透',
+      click: () => {
+        const next = !store.get('clickThrough');
+        store.set('clickThrough', next);
+        if (widgetWindow && !widgetWindow.isDestroyed()) {
+          widgetWindow.setIgnoreMouseEvents(next, { forward: true });
         }
       }
     },
@@ -224,11 +246,11 @@ async function getSpeech() {
   }
 
   const nickname = store.get('nickname');
-  const mood = '温柔、懂产品经理辛苦、偶尔傲娇的猫系机器人';
+  const mood = '温柔、治愈、像小宠物的机器人';
   const now = new Date().toLocaleString();
   const weather = cachedWeather.summary || '未知天气';
   const overtime = store.get('overtimeTime') || '未设置';
-  const prompt = `你是${mood}，称呼对方为${nickname}。现在时间${now}，天气${weather}，预计下班${overtime}。请生成一句20字以内的中文短句。`;
+  const prompt = `你是${mood}，称呼对方为${nickname}。现在时间${now}，天气${weather}，预计下班${overtime}。请生成一句20字以内的中文短句，语气像贴心小宠物。`;
 
   try {
     if (provider === 'gemini') {

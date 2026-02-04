@@ -13,6 +13,7 @@ async function init() {
   document.getElementById('aiModel').value = settings.aiModel;
   document.getElementById('aiBaseUrl').value = settings.aiBaseUrl;
   document.getElementById('alwaysOnTop').checked = settings.alwaysOnTop;
+  document.getElementById('clickThrough').checked = settings.clickThrough;
 }
 
 async function save() {
@@ -30,6 +31,7 @@ async function save() {
   settings.aiModel = document.getElementById('aiModel').value.trim();
   settings.aiBaseUrl = document.getElementById('aiBaseUrl').value.trim();
   settings.alwaysOnTop = document.getElementById('alwaysOnTop').checked;
+  settings.clickThrough = document.getElementById('clickThrough').checked;
   await window.xiaoxu.setSettings(settings);
   window.close();
 }
