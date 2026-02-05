@@ -5,6 +5,7 @@ async function init() {
   document.getElementById('checkOutTime').value = settings.checkOutTime;
   document.getElementById('punchUrl').value = settings.punchUrl;
   document.getElementById('overtimeTime').value = settings.overtimeTime;
+  document.getElementById('remindAdvanceMinutes').value = settings.remindAdvanceMinutes ?? 0;
   document.getElementById('aiProvider').value = settings.aiProvider;
   document.getElementById('aiKey').value = settings.aiKey;
   document.getElementById('aiModel').value = settings.aiModel;
@@ -21,6 +22,7 @@ async function save() {
   settings.checkOutTime = document.getElementById('checkOutTime').value || '18:30';
   settings.punchUrl = document.getElementById('punchUrl').value.trim();
   settings.overtimeTime = document.getElementById('overtimeTime').value;
+  settings.remindAdvanceMinutes = Number(document.getElementById('remindAdvanceMinutes').value || 0);
   settings.aiProvider = document.getElementById('aiProvider').value;
   settings.aiKey = document.getElementById('aiKey').value.trim();
   settings.aiModel = document.getElementById('aiModel').value.trim();

@@ -8,6 +8,7 @@ const storeDefaults = {
   checkOutTime: '18:30',
   punchUrl: '',
   overtimeTime: '',
+  remindAdvanceMinutes: 0,
   aiProvider: 'local',
   aiKey: '',
   aiModel: 'gpt-4o-mini',
@@ -359,9 +360,11 @@ async function schedulerTick() {
 
   const weather = await updateWeather(now);
   const extraAdvance = weather.isBad ? 10 : 0;
+  const userAdvance = Number(store.get('remindAdvanceMinutes') || 0);
+  const totalAdvance = Math.max(0, userAdvance + extraAdvance);
 
-  const checkIn = timeToMinutes(store.get('checkInTime')) - extraAdvance;
-  const checkOut = timeToMinutes(store.get('checkOutTime')) - extraAdvance;
+  const checkIn = timeToMinutes(store.get('checkInTime')) - totalAdvance;
+  const checkOut = timeToMinutes(store.get('checkOutTime')) - totalAdvance;
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
   if (nowMinutes === checkIn && lastReminder.checkIn !== dateKey) {
