@@ -418,8 +418,15 @@ ipcMain.handle('get-weather-summary', async () => {
 });
 
 ipcMain.handle('open-punch-url', () => {
-  const url = store.get('punchUrl');
-  if (url) shell.openExternal(url);
+  const raw = (store.get('punchUrl') || '').trim();
+  if (!raw) {
+    new Notification({ title: '打卡链接未设置', body: '请先在设置里填写打卡链接。' }).show();
+    return false;
+  }
+  const hasScheme = /^https?:\/\//i.test(raw);
+  const url = hasScheme ? raw : `https://${raw}`;
+  shell.openExternal(url);
+  return true;
 });
 
 ipcMain.handle('show-settings', () => createSettingsWindow());
