@@ -15,7 +15,7 @@ body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  border-radius: 999px;
+  border-radius: 50%;
 }
 
 .widget {
@@ -26,7 +26,8 @@ body {
   position: relative;
   -webkit-app-region: drag;
   background: rgba(230, 245, 255, 0.95);
-  border-radius: 999px;
+  border-radius: 50%;
+  overflow: hidden;
   box-shadow: 0 14px 26px rgba(40, 80, 120, 0.25);
 }
 

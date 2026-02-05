@@ -37,8 +37,8 @@ const phrases = JSON.parse(fs.readFileSync(path.join(__dirname, 'local_phrases.j
 
 function createWidgetWindow() {
   const windowOptions = {
-    width: 120,
-    height: 120,
+    width: 60,
+    height: 60,
     resizable: false,
     useContentSize: true,
     transparent: true,
