@@ -11,11 +11,11 @@
 }
 
 body {
-  background: #eaf2ff;
+  background: transparent;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  border-radius: 28px;
+  border-radius: 999px;
 }
 
 .widget {

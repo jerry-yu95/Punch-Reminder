@@ -37,15 +37,15 @@ const phrases = JSON.parse(fs.readFileSync(path.join(__dirname, 'local_phrases.j
 
 function createWidgetWindow() {
   const windowOptions = {
-    width: 180,
-    height: 180,
+    width: 120,
+    height: 120,
     resizable: false,
     useContentSize: true,
-    transparent: false,
+    transparent: true,
     frame: false,
     skipTaskbar: true,
     alwaysOnTop: true,
-    backgroundColor: '#EAF2FF',
+    backgroundColor: '#00000000',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js')
     }
