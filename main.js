@@ -428,6 +428,9 @@ ipcMain.handle('open-punch-url', () => {
   }
   const hasScheme = /^https?:\/\//i.test(raw);
   const url = hasScheme ? raw : `https://${raw}`;
+  if (reminderWindow && !reminderWindow.isDestroyed()) {
+    reminderWindow.hide();
+  }
   shell.openExternal(url);
   return true;
 });

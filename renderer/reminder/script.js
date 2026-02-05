@@ -10,4 +10,5 @@ window.xiaoxu.onReminder((payload) => {
 
 openBtn.addEventListener('click', () => {
   window.xiaoxu.openPunchUrl();
+  window.close();
 });
