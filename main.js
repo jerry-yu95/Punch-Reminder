@@ -347,6 +347,12 @@ function showReminder(payload) {
   if (!reminderWindow || reminderWindow.isDestroyed()) {
     createReminderWindow();
   }
+  const { screen } = require('electron');
+  const display = screen.getPrimaryDisplay();
+  const { width } = display.workAreaSize;
+  const x = width - 280;
+  const y = 40;
+  reminderWindow.setPosition(x, y, false);
   reminderWindow.show();
   reminderWindow.webContents.send('reminder', payload);
 }
