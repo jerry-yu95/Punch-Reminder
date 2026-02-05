@@ -28,7 +28,7 @@ let settingsWindow;
 let reminderWindow;
 let tray;
 let isQuitting = false;
-let lastReminder = { checkIn: '', checkOut: '', sedentary: '' };
+let lastReminder = { checkIn: '', checkOut: '', sedentary: '', overtime: '' };
 let cachedWorkday = { date: '', isWorkday: true };
 let cachedWeather = { date: '', isBad: false, summary: '', temp: null };
 let cachedLocation = { date: '', lat: null, lon: null };
@@ -197,6 +197,37 @@ function randomFrom(list) {
   return list[Math.floor(Math.random() * list.length)];
 }
 
+function getSmartGreeting(nickname, weatherInfo) {
+  const hour = new Date().getHours();
+  let greeting = '';
+
+  if (hour < 9) greeting = `早安，${nickname}！今天是元气满满的一天，记得签到哦~`;
+  else if (hour < 12) greeting = `上午好，${nickname}！专注工作的同时，别忘了喝杯水。`;
+  else if (hour < 14) greeting = `午休时间到了，${nickname}。睡个好觉，下午更有精神！`;
+  else if (hour < 18) greeting = `下午茶时间，${nickname}。再坚持一下，离下班不远了！`;
+  else greeting = `辛苦了，${nickname}！今天的任务完成了吗？准备撤退吧~`;
+
+  if (weatherInfo && weatherInfo.includes('雨')) {
+    greeting += ' 🌧️ 外面下雨了，下班打卡后记得带伞。';
+  }
+
+  return greeting;
+}
+
+function getFridayMode(nickname) {
+  const now = new Date();
+  const day = now.getDay();
+  const hour = now.getHours();
+  if (day === 5) {
+    if (hour >= 14 && hour < 17) {
+      return `【周五摸鱼态】${nickname}，离周末只有最后几小时了！效率拉满，准备撤退！🚀`;
+    } else if (hour >= 17) {
+      return `【狂欢预警】${nickname}！检测到周末信号！打完这最后一次卡，我们就自由啦！🎉`;
+    }
+  }
+  return null;
+}
+
 async function isWorkday(date) {
   const key = formatDateKey(date);
   if (cachedWorkday.date === key) return cachedWorkday.isWorkday;
@@ -293,20 +324,18 @@ async function updateWeather(date) {
 
 async function getSpeech() {
   const provider = store.get('aiProvider');
+  const nickname = store.get('nickname');
+  const fridayLine = getFridayMode(nickname);
+  if (fridayLine) return fridayLine;
   if (!provider || provider === 'local' || !store.get('aiKey')) {
-    const hour = new Date().getHours();
-    if (hour >= 6 && hour < 11) return randomFrom(phrases.morning);
-    if (hour >= 11 && hour < 14) return randomFrom(phrases.noon);
-    if (hour >= 14 && hour < 20) return randomFrom(phrases.on_time);
-    return randomFrom(phrases.late);
+    return getSmartGreeting(nickname, cachedWeather.summary || '');
   }
 
-  const nickname = store.get('nickname');
   const mood = '温柔、治愈、像小宠物的机器人';
   const now = new Date().toLocaleString();
   const weather = cachedWeather.summary || '未知天气';
   const overtime = store.get('overtimeTime') || '未设置';
-  const prompt = `你是${mood}，称呼对方为${nickname}。现在时间${now}，天气${weather}，预计下班${overtime}。请生成一句20字以内的中文短句，语气像贴心小宠物。`;
+  const prompt = `你是${mood}，称呼对方为${nickname}。现在时间${now}，天气${weather}，预计下班${overtime}。请生成一句20字以内的中文短句，语气像贴心小宠物。若天气含雨，附带带伞提醒。`;
 
   try {
     if (provider === 'gemini') {
@@ -386,8 +415,26 @@ async function schedulerTick() {
   }
 
   const overtime = store.get('overtimeTime');
+  const nowDay = now.getDay();
+  if (nowDay === 5 && now.getHours() >= 14 && widgetWindow && !widgetWindow.isDestroyed()) {
+    widgetWindow.webContents.send('mood', 'excited');
+  } else if (widgetWindow && !widgetWindow.isDestroyed()) {
+    widgetWindow.webContents.send('mood', 'normal');
+  }
   if (overtime) {
     const overtimeMinutes = timeToMinutes(overtime);
+    if (nowMinutes >= overtimeMinutes + 30 && lastReminder.overtime !== dateKey && lastReminder.checkOut !== dateKey) {
+      lastReminder.overtime = dateKey;
+      if (widgetWindow && !widgetWindow.isDestroyed()) {
+        widgetWindow.webContents.send('mood', 'worry');
+      }
+      showReminder({
+        title: '加班关怀',
+        body: '小主，身体是革命的本钱，今天辛苦了，我们回家吧。',
+        showButton: false
+      });
+      new Notification({ title: '加班关怀', body: '小主，身体是革命的本钱，今天辛苦了，我们回家吧。' }).show();
+    }
     if (nowMinutes === overtimeMinutes - 15 && widgetWindow) {
       widgetWindow.webContents.send('mood', 'worry');
     }

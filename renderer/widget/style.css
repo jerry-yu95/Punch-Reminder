@@ -33,10 +33,31 @@ body {
   place-items: center;
   position: relative;
   -webkit-app-region: drag;
-  background: rgba(230, 245, 255, 0.98);
+  background: transparent;
   border-radius: 50%;
-  overflow: hidden;
-  box-shadow: 0 10px 22px rgba(40, 80, 120, 0.25);
+  overflow: visible;
+}
+
+.base {
+  position: absolute;
+  width: 88%;
+  height: 88%;
+  border-radius: 50%;
+  background: rgba(190, 220, 255, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 8px 18px rgba(40, 80, 120, 0.25);
+  transform: translateY(6px);
+}
+
+.widget[data-mood='excited'] .base {
+  background: rgba(170, 220, 255, 0.65);
+  box-shadow: 0 10px 22px rgba(40, 120, 200, 0.35);
+}
+
+.widget[data-mood='worry'] .base {
+  background: rgba(255, 220, 220, 0.6);
+  box-shadow: 0 10px 22px rgba(160, 60, 60, 0.25);
 }
 
 #robot {
@@ -44,13 +65,26 @@ body {
   height: 100%;
   object-fit: contain;
   opacity: 1;
-  transition: opacity 0.25s ease;
+  transition: transform 0.8s ease-in-out;
   pointer-events: auto;
   -webkit-app-region: drag;
+  animation: floaty 3.5s ease-in-out infinite;
 }
 
 .widget:hover #robot {
   opacity: 1;
+}
+
+@keyframes floaty {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+  100% {
+    transform: translateY(0);
+  }
 }
 
 .bubble {
